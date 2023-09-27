@@ -5,6 +5,7 @@
 * [Demostration](#demostration)
 * [Technologies](#technologies)
 * [Setup](#setup)
+* [Authors](#authors)
 * [Licence](#licence)
 
 ## Description
@@ -23,6 +24,9 @@ Still in development....
 To run this project you need to ...
 
 Still in development....
+
+## Authors
+More details about the authors in the [AUTHORS.md](https://github.com/miguelgonrod/TerraMap-AI/blob/main/AUTHORS.md) file.
 
 ## Licence
 Terramap-AI is available under the BSD-3-Clause license. See the LICENSE file for more details.
