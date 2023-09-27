@@ -8,7 +8,7 @@
 * [Licence](#licence)
 
 ## Description
-In progress...
+Welcome to TerraMap AI Explorer repository! This project seamlessly combines CockroachDB, React, and ROS (Robot Operating System) to create an integrated system that allows your Turtlebot 3 to perform Autonomous Simultaneous Localization and Mapping (SLAM). Not only can you watch your Turtlebot explore and map its environment, but you can also visualize the progress and download the resulting maps through a user-friendly web interface.
 
 ## Demostration
 
