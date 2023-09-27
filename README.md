@@ -1,4 +1,4 @@
-# ProyectoIngesoft
+# TerraMap AI Explorer
 
 ## Table of contents
 * [Description](#description)
@@ -8,7 +8,7 @@
 * [Licence](#licence)
 
 ## Description
-I made this project as my final project of junior II module in the RAS Javeriana student group, in this project you will find a node for ros 1 that allows pepper to communicate through ChatGPT api and python SpeechRecognition library.
+In progress...
 
 ## Demostration
 
@@ -25,4 +25,4 @@ To run this project you need to ...
 Still in development....
 
 ## Licence
-ProyectoIngesoft is available under the BSD-3-Clause license. See the LICENSE file for more details.
+Terramap-AI is available under the BSD-3-Clause license. See the LICENSE file for more details.
