@@ -32,7 +32,6 @@ class TurtleBot3Exploration:
 
     def scan_callback(self, scan_msg):
         self.laser_data = scan_msg.ranges
-
     def odom_callback(self, odom_msg):
         self.pose = odom_msg.pose.pose
 
@@ -87,19 +86,28 @@ class TurtleBot3Exploration:
         path = a_star.a_star_search(start, goal)
         return path
     def is_obstacle_in_front(self):
-        if self.laser_data:
-            front_angles = range(-15, 16)
-            front_distances = [self.laser_data[i] for i in front_angles]
-            min_distance_front = min(front_distances)
-            if min_distance_front <= 0.05:  # Threshold distance for obstacle in front
+        #define obstacle treshold
+        obstacle_threshold = 0.25 
+        for i in range(0,16,1):
+            if self.laser_data[i] < obstacle_threshold:
+                return True
+        for i in range(345,360,1):
+            if self.laser_data[i] < obstacle_threshold:
                 return True
         return False
-    def avoid(self, change):
+    def is_obstacle_in_right(self):
+        #define obstacle treshold
+        obstacle_threshold = 0.25 
+        for i in range(255,285,1):
+            if self.laser_data[i] < obstacle_threshold:
+                return True
+        return False
+    def avoid(self):
         print("Found an obstacle, turtlebot is avoiding it...\n")
         rate = rospy.Rate(10)
-        backward_duration = 1
-        rotation_duration = 6
-        forward_duration = 2
+        backward_duration = 2
+        rotation_duration = 5
+        forward_duration = 3
         #make the robot go backwards
         self.explore_cmd.linear.x = -0.2
         self.explore_cmd.angular.z = 0.0
@@ -110,31 +118,34 @@ class TurtleBot3Exploration:
           rate.sleep()
           current_time = int(time.time())
         #make the robot rotate to avoid obstacle
+        dir = 1
+        if not self.is_obstacle_in_right():
+            dir = -1
         self.explore_cmd.linear.x = 0.0
-        self.explore_cmd.angular.z = change/6
+        self.explore_cmd.angular.z = dir/6
         current_time = int(time.time())
         start_time = int(time.time())
         while (current_time - start_time) < rotation_duration:
           self.cmd_vel_pub.publish(self.explore_cmd)
           rate.sleep()
           current_time = int(time.time())
+        #go forward
         self.explore_cmd.linear.x = 0.2
         self.explore_cmd.angular.z = 0.0
         current_time = int(time.time())
         start_time = int(time.time())
-        while (current_time - start_time) < forward_duration:
+        while ((current_time - start_time) < forward_duration) and (not self.is_obstacle_in_front()):
           self.cmd_vel_pub.publish(self.explore_cmd)
           rate.sleep()
           current_time = int(time.time())
+        #stop the robot
         self.explore_cmd.linear.x = 0.0
         self.explore_cmd.angular.z = 0.0        
         self.cmd_vel_pub.publish(self.explore_cmd)
         rate.sleep()
 
-
     def navigate_path(self, path):
         rate = rospy.Rate(10)
-        initial_time = datetime.now()
 
         while not rospy.is_shutdown() and path:
             current_pos_x, current_pos_y = path[0]
@@ -155,19 +166,16 @@ class TurtleBot3Exploration:
             #robot's orientation is adjusted towards the target waypoint
             if abs(angle_difference) > 0.1:
                 self.explore_cmd.linear.x = 0.0
-                self.explore_cmd.angular.z = 0.2 * angle_difference
+                self.explore_cmd.angular.z = 0.1 * angle_difference
             else:
                 # Move the robot towards the target waypoint
                 self.explore_cmd.linear.x = 0.2
                 self.explore_cmd.angular.z = 0.0
             if self.is_obstacle_in_front():
-                self.avoid(1)
+                self.avoid()
                 break
             self.cmd_vel_pub.publish(self.explore_cmd)
             rate.sleep()
-            #stops the navigation if it cant reach the goal after 5 secs, in case the goal is unreachable
-            if datetime.now() - initial_time >= timedelta(seconds=5):
-                break
         # Stop the robot once it reaches the final goal
         self.explore_cmd.linear.x = 0.0
         self.explore_cmd.angular.z = 0.0
@@ -176,35 +184,33 @@ class TurtleBot3Exploration:
     def explore(self):
         rate = rospy.Rate(10)
         while not rospy.is_shutdown():
-            change = 1
             if self.laser_data and self.pose and self.map_data:
                 # Get current robot position and convert it to grid coordinates
                 current_pos_x = int((self.pose.position.x - self.map_origin_x) / self.map_resolution)
                 current_pos_y = int((self.pose.position.y - self.map_origin_y) / self.map_resolution)
                 #convert map into an array for using A*
                 map_array = self.convert_map_to_array()
-
                 #check if map exists and is already converted into an array for using A*
                 if not map_array:
                     print("Sorry, no map available and/or there is data from SLAM\n")
                 else:
-                    if change == 1:
-                        change = -1
-                    else:
-                        change = 1
                     if self.is_obstacle_in_front():
-                        self.avoid(change)
+                        self.avoid()
                     current_time = int(time.time())
                     random.seed(current_time)
-                    # Define a range for random exploration distance (e.g., within the boundaries of the map)
-                    max_exploration_distance = min(self.map_width, self.map_height) / 2
                     # Generate random angle and distance for exploration
                     random_angle = random.uniform(0, 2 * math.pi)
-                    random_distance = random.uniform(1.0, max_exploration_distance)
-
                     # Calculate the target position based on random angle and distance
-                    target_pos_x = current_pos_x + int(random_distance * math.cos(random_angle))
-                    target_pos_y = current_pos_y + int(random_distance * math.sin(random_angle))
+                    target_pos_x = current_pos_x + int(self.map_height * math.cos(random_angle))
+                    target_pos_y = current_pos_y + int(self.map_width * math.sin(random_angle))
+                    if target_pos_x >= self.map_height:
+                        target_pos_x = self.map_height -1
+                    if target_pos_x < 0:
+                        target_pos_x = 0  
+                    if target_pos_y >= self.map_width:
+                        target_pos_y = self.map_width -1
+                    if target_pos_y < 0:
+                        target_pos_y = 0  
 
                 # Use the computed A* path for navigation
                 path = self.a_star_algorithm(current_pos_x, current_pos_y, target_pos_x, target_pos_y, map_array)
