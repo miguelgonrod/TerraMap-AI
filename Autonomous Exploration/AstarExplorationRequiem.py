@@ -102,18 +102,25 @@ class TurtleBot3Exploration:
             if self.laser_data[i] < obstacle_threshold:
                 return True
         return False
+    def is_obstacle_in_back(self):
+        #define obstacle treshold
+        obstacle_threshold = 0.25 
+        for i in range(165,195,1):
+            if self.laser_data[i] < obstacle_threshold:
+                return True
+        return False
     def avoid(self):
         print("Found an obstacle, turtlebot is avoiding it...\n")
         rate = rospy.Rate(10)
-        backward_duration = 2
-        rotation_duration = 5
-        forward_duration = 3
+        backward_duration = 4
+        rotation_duration = 9
+        forward_duration = 10
         #make the robot go backwards
         self.explore_cmd.linear.x = -0.2
         self.explore_cmd.angular.z = 0.0
         current_time = int(time.time())
         start_time = int(time.time())
-        while (current_time - start_time) < backward_duration:
+        while (current_time - start_time) < backward_duration and not self.is_obstacle_in_back():
           self.cmd_vel_pub.publish(self.explore_cmd)
           rate.sleep()
           current_time = int(time.time())
