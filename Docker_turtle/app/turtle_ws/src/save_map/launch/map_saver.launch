@@ -1,0 +1,20 @@
+<launch>
+    <!-- Parámetros recibidos -->
+    <arg name="nombre_del_archivo" />
+    <arg name="descripcion" />
+    <arg name="usuario" />
+    <arg name="mapname" default="/maps/$(arg nombre_del_archivo)"/>
+
+    <!-- Lanzar map_saver -->
+    <node pkg="map_server" type="map_saver" name="map_saver" args="-f $(arg mapname)" output="screen" />
+
+    <!-- Lanzar tu propio nodo -->
+    <node pkg="save_map" type="notifier.py" name="notify" output="screen">
+        <param name="description" value="$(arg descripcion)" />
+        <param name="username" value="$(arg usuario)" />
+        <param name="filename" value="$(arg nombre_del_archivo)" />
+    </node>
+</launch>
+
+
+
